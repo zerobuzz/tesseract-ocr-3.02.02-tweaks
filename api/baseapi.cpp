@@ -1059,6 +1059,7 @@ char* TessBaseAPI::GetHOCRText(int page_number) {
 
   int lcnt = 1, bcnt = 1, pcnt = 1, wcnt = 1;
   int page_id = page_number + 1;  // hOCR uses 1-based page numbers.
+  int* conf = AllWordConfidences();
 
   STRING hocr_str("");
 
@@ -1081,6 +1082,10 @@ char* TessBaseAPI::GetHOCRText(int page_number) {
       res_it->Next(RIL_WORD);
       continue;
     }
+
+    hocr_str.add_str_int("\n<div data-word='", wcnt);
+    hocr_str.add_str_int("' data-confidence='", conf[wcnt]);
+    hocr_str += "'>\n";
 
     // Open any new block/paragraph/textline.
     if (res_it->IsAtBeginningOf(RIL_BLOCK)) {
@@ -1151,12 +1156,14 @@ char* TessBaseAPI::GetHOCRText(int page_number) {
       hocr_str += "   </div>\n";
       bcnt++;
     }
+    hocr_str += "\n</div><!-- data-confidence -->\n";
   }
   hocr_str += "  </div>\n";
 
   char *ret = new char[hocr_str.length() + 1];
   strcpy(ret, hocr_str.string());
   delete res_it;
+  delete [] conf;
   return ret;
 }
 
